@@ -1,6 +1,6 @@
-# QuizArena
+# Quiz Khelo
 
-QuizArena is a real-time classroom quiz platform. Teachers create and host quizzes, students join with a six-digit game PIN, and live game state, answers, scoring, and leaderboards are synchronized over WebSockets.
+Quiz Khelo is a real-time classroom quiz platform. Teachers create and host quizzes, students join with a six-digit game PIN, and live game state, answers, scoring, and leaderboards are synchronized over WebSockets.
 
 ## Features
 

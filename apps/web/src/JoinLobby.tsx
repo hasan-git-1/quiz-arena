@@ -28,7 +28,7 @@ function FinalPodium({ entries, playerId }: { entries: LeaderboardEntry[]; playe
       <span aria-hidden="true">🏆</span>
       <p className="eyebrow">FINAL RESULTS</p>
       <h1>Quiz champions</h1>
-      <p>Thanks for playing QuizArena.</p>
+      <p>Thanks for playing Quiz Khelo.</p>
     </div>
     <div className="podium-steps">
       {podiumOrder.map((entry) => <article className={`podium-player podium-rank-${entry.rank} ${entry.playerId === playerId ? "podium-you" : ""}`} key={entry.playerId}>
@@ -74,7 +74,7 @@ export function JoinLobby() {
       setFeedback(nextFeedback);
       setMessage(null);
     });
-    socket.on("connect_error", () => { setJoining(false); setMessage("Could not connect to QuizArena. Please try again."); });
+    socket.on("connect_error", () => { setJoining(false); setMessage("Could not connect to Quiz Khelo. Please try again."); });
     return () => {
       socket.off("game:lobby-updated", setLobby);
       socket.off("game:student-state");
@@ -123,10 +123,10 @@ export function JoinLobby() {
   const showAnswers = status === "ANSWER_COLLECT" && currentQuestion !== null;
   const isLocked = selectedOption !== null;
 
-  if (!lobby) return <main className="join-screen"><section className="teacher-panel join-panel"><p className="eyebrow">QUIZARENA</p><h1>Join a live quiz</h1><p>Enter the PIN shown by your teacher.</p><form onSubmit={join}><label>Game PIN<input inputMode="numeric" maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" autoFocus /></label><label>Nickname<input value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={30} placeholder="Your name" /></label>{message && <p className="form-error">{message}</p>}<button className="teacher-primary" disabled={joining}>{joining ? "Joining..." : "Join game"}</button></form><a className="teacher-link" href="/teacher">Teacher sign up or log in</a></section></main>;
+  if (!lobby) return <main className="join-screen"><section className="teacher-panel join-panel"><p className="eyebrow">QUIZ KHELO</p><h1>Join a live quiz</h1><p>Enter the PIN shown by your teacher.</p><form onSubmit={join}><label>Game PIN<input inputMode="numeric" maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" autoFocus /></label><label>Nickname<input value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={30} placeholder="Your name" /></label>{message && <p className="form-error">{message}</p>}<button className="teacher-primary" disabled={joining}>{joining ? "Joining..." : "Join game"}</button></form><a className="teacher-link" href="/teacher">Teacher sign up or log in</a></section></main>;
 
   return <main className="student-game-screen">
-    <header className="student-header"><span>QUIZARENA</span><strong>{seconds !== null ? `${seconds}s` : `${lobby.players.length} players`}</strong></header>
+    <header className="student-header"><span>QUIZ KHELO</span><strong>{seconds !== null ? `${seconds}s` : `${lobby.players.length} players`}</strong></header>
     {status === "LOBBY" && <section className="student-panel"><p className="eyebrow">YOU ARE IN</p><h1>Hi, {nickname || "player"}!</h1><p>Watch the shared screen. The teacher will start the quiz shortly.</p><div className="student-player-count">{lobby.players.length} players joined</div></section>}
     {status === "QUESTION_SHOW" && currentQuestion && <section className="student-panel student-question-preview"><p className="eyebrow">QUESTION {(currentQuestion.index ?? 0) + 1} OF {currentQuestion.totalQuestions}</p><h1>{currentQuestion.text}</h1>{currentQuestion.imageUrl && <img src={currentQuestion.imageUrl} alt="Question illustration" />}<div className="student-option-preview">{currentQuestion.options.map((option, index) => <div className={`student-option-preview-item ${answerStyles[index]}`} key={`${option.text}-${index}`}><span className="answer-symbol" aria-hidden="true" /><strong>{option.text}</strong></div>)}</div><p className="question-preview-note">Answer buttons unlock in a moment.</p></section>}
     {showAnswers && <section className="student-answer-stage"><div className="student-stage-info"><span>Question {currentQuestion.index + 1} / {currentQuestion.totalQuestions}</span><strong>{seconds}s</strong></div><article className="student-question-card"><h2>{currentQuestion.text}</h2>{currentQuestion.imageUrl && <img src={currentQuestion.imageUrl} alt="Question illustration" />}</article><div className={`answer-grid answer-grid-${currentQuestion.optionCount}`}>{answerStyles.slice(0, currentQuestion.optionCount).map((shape, index) => <button className={`student-answer ${shape} ${selectedOption === index ? "selected" : ""}`} key={shape} onClick={() => submitAnswer(index)} disabled={isLocked} aria-label={`Answer option ${index + 1}: ${currentQuestion.options[index]?.text ?? ""}`}><span className="answer-symbol" aria-hidden="true" /><span className="answer-label">{currentQuestion.options[index]?.text}</span></button>)}</div>{isLocked && <div className="student-panel answer-locked"><p className="eyebrow">ANSWER LOCKED</p><p>Your answer was securely sent to the server.</p></div>}</section>}

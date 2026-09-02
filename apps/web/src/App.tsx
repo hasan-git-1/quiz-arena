@@ -14,5 +14,5 @@ export function App() {
     }).then(setHealth).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "Unable to reach API"));
   }, []);
 
-  return <main><p className="eyebrow">REAL-TIME CLASSROOM QUIZZES</p><h1>QuizArena</h1><p>Phase 1 is connected.</p><section aria-live="polite">{health ? `API: ${health.status} · Postgres: ${health.database} · Redis: ${health.redis}` : error ?? "Checking API…"}</section></main>;
+  return <main><p className="eyebrow">REAL-TIME CLASSROOM QUIZZES</p><h1>Quiz Khelo</h1><p>Phase 1 is connected.</p><section aria-live="polite">{health ? `API: ${health.status} · Postgres: ${health.database} · Redis: ${health.redis}` : error ?? "Checking API…"}</section></main>;
 }

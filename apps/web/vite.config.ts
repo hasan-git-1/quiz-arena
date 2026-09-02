@@ -8,8 +8,8 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "QuizArena",
-        short_name: "QuizArena",
+        name: "Quiz Khelo",
+        short_name: "Quiz Khelo",
         description: "Real-time classroom quizzes.",
         theme_color: "#5b21b6",
         background_color: "#170d33",

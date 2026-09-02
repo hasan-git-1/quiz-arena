@@ -65,3 +65,30 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .join-panel .teacher-link:hover { color: #174d48; text-decoration: underline; text-underline-offset: .2rem; }
 .join-panel .form-error { margin: 0; color: #b64f3d; font-size: .9rem; }
 @media (max-width: 480px) { .join-screen { padding: 1rem; }.join-panel { padding: 1.35rem; border-radius: 1rem; }.join-panel h1 { font-size: clamp(2.5rem, 14vw, 3.5rem); } }
+
+.join-panel { animation: entry-panel-in .55s cubic-bezier(.2, .8, .2, 1) both; }
+.join-panel::before { animation: brand-mark-in .7s .08s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes entry-panel-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes brand-mark-in { from { opacity: 0; transform: rotate(-8deg) scale(.8); } to { opacity: 1; transform: rotate(0) scale(1); } }
+
+/* Shared light brand treatment for teacher entry */
+.teacher-auth { position: relative; isolation: isolate; overflow: hidden; max-width: none; min-height: 100vh; padding: clamp(2rem, 7vw, 5rem) clamp(1.25rem, 7vw, 6rem); background: #f5f8f7; color: #173331; }
+.teacher-auth::before { position: absolute; inset: 0; z-index: -2; content: ""; background: linear-gradient(135deg, #f5f8f7 0%, #eaf3f0 52%, #fff7ef 100%); }
+.teacher-auth::after { position: absolute; inset: 0; z-index: -1; content: ""; opacity: .5; background-image: linear-gradient(#bdd4cf 1px, transparent 1px), linear-gradient(90deg, #bdd4cf 1px, transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(to bottom, black, transparent 72%); }
+.teacher-auth > section { display: grid; align-content: center; gap: .9rem; margin: 0; padding: 0; background: transparent; color: #173331; }
+.teacher-brand-mark { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; margin-bottom: .2rem; color: #fff; background: #ef765d; border-radius: 1rem 1rem 1rem .3rem; font-size: 1rem; font-weight: 900; letter-spacing: .04em; box-shadow: 0 10px 22px rgba(239, 118, 93, .28); animation: brand-mark-in .7s .08s cubic-bezier(.2, .8, .2, 1) both; }
+.teacher-auth .eyebrow { margin: 0; color: #39756d; font-size: .72rem; letter-spacing: .18em; }
+.teacher-auth h1 { margin: 0; color: #173331; font-size: clamp(3rem, 7vw, 6.25rem); line-height: .93; letter-spacing: -.06em; }
+.teacher-auth > section > p:not(.eyebrow) { max-width: 31rem; margin: 0; color: #607672; font-size: 1.15rem; line-height: 1.55; }
+.teacher-auth > section > .teacher-link { justify-self: start; margin-top: .4rem; padding-left: 0; color: #39756d; text-decoration: none; }
+.teacher-auth > section > .teacher-link:hover { color: #174d48; text-decoration: underline; text-underline-offset: .2rem; }
+.teacher-auth > .teacher-panel { width: min(100%, 440px); gap: 1.2rem; padding: clamp(1.5rem, 4vw, 2.25rem); background: rgba(255, 255, 255, .94); border: 1px solid #d7e4e0; border-radius: 1.25rem; box-shadow: 0 24px 70px rgba(36, 77, 70, .14); animation: entry-panel-in .55s .12s cubic-bezier(.2, .8, .2, 1) both; }
+.teacher-auth > .teacher-panel h2 { margin: 0 0 .25rem; color: #173331; font-size: 1.5rem; letter-spacing: -.02em; }
+.teacher-auth > .teacher-panel label { gap: .5rem; color: #294d48; font-size: .82rem; }
+.teacher-auth > .teacher-panel input { min-height: 3.1rem; padding: .8rem .95rem; color: #173331; background: #f8fbfa; border: 1px solid #c8d9d5; border-radius: .7rem; font-size: 1rem; }
+.teacher-auth > .teacher-panel input:focus { background: #fff; border-color: #39756d; box-shadow: 0 0 0 4px rgba(57, 117, 109, .14); outline: 0; }
+.teacher-auth > .teacher-panel .teacher-primary { min-height: 3.1rem; margin-top: .2rem; background: #1f625b; border-radius: .7rem; box-shadow: 0 8px 16px rgba(31, 98, 91, .2); }
+.teacher-auth > .teacher-panel .teacher-primary:hover:not(:disabled) { background: #174d48; }
+.teacher-auth > .teacher-panel .teacher-link { color: #39756d; text-decoration: none; }
+.teacher-auth > .teacher-panel .teacher-link:hover { color: #174d48; text-decoration: underline; text-underline-offset: .2rem; }
+@media (max-width: 720px) { .teacher-auth { grid-template-columns: 1fr; gap: 2rem; padding: 1.5rem 1rem 2rem; }.teacher-auth h1 { font-size: clamp(3rem, 16vw, 4.5rem); }.teacher-auth > .teacher-panel { width: 100%; } }

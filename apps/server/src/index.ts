@@ -39,7 +39,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/quizzes", quizzesRouter);
 app.use("/api", gamesRouter);
 
-io.on("connection", (socket) => socket.emit("server:ready", { message: "QuizArena realtime server connected" }));
+io.on("connection", (socket) => socket.emit("server:ready", { message: "Quiz Khelo realtime server connected" }));
 registerGameLobbyHandlers(io);
 
 app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
@@ -52,5 +52,5 @@ app.use((error: unknown, _request: express.Request, response: express.Response, 
 });
 
 httpServer.listen(env.PORT, "0.0.0.0", () => {
-  console.log(`QuizArena server listening on http://localhost:${env.PORT}`);
+  console.log(`Quiz Khelo server listening on http://localhost:${env.PORT}`);
 });

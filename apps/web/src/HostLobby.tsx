@@ -89,7 +89,7 @@ export function HostLobby({ game, teacherToken, onExit }: { game: HostedGame; te
   return <main className="lobby-screen game-host">
     <header className="lobby-header"><div><p className="eyebrow">LIVE QUIZ</p><h1>{status === "LOBBY" ? "Join the game" : "Game in progress"}</h1></div>{status === "LOBBY" && <button className="teacher-link" onClick={onExit}>Back to quizzes</button>}</header>
     {status === "LOBBY" ? <section className="lobby-grid">
-      <section className="lobby-pin-card"><p>Game PIN</p><strong>{game.pin}</strong><p>Players can enter this PIN at QuizArena.</p><code>{joinUrl}</code><button className="lobby-link-button" onClick={copyJoinLink}>Copy join link</button></section>
+      <section className="lobby-pin-card"><p>Game PIN</p><strong>{game.pin}</strong><p>Players can enter this PIN at Quiz Khelo.</p><code>{joinUrl}</code><button className="lobby-link-button" onClick={copyJoinLink}>Copy join link</button></section>
       <section className="qr-card"><img src={game.qrCodeDataUrl} alt={`QR code to join game ${game.pin}`} /><strong>Scan to join</strong></section>
       <section className="teacher-panel lobby-players"><h2>Players <span>{lobby?.players.length ?? 0}</span></h2>{lobby?.players.length ? <ul>{lobby.players.map((player) => <li key={player.id}>{player.nickname}</li>)}</ul> : <p className="muted">Waiting for players to join…</p>}</section>
       <button className="teacher-primary host-start" onClick={() => runAction("game:start")} disabled={busy}>{busy ? "Starting…" : "Start game"}</button>
