@@ -4,7 +4,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
-  WEB_APP_URL: z.string().url(),
+  WEB_APP_URL: z.string().url().transform((url) => url.replace(/\/+$/, "")),
   PORT: z.coerce.number().int().positive().default(3001),
 });
 
