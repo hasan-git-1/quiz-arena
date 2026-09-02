@@ -131,7 +131,7 @@ The repository includes provider configuration for the recommended split deploym
 For a Render backend and Vercel frontend:
 
 - Create the Render service from this repository, or use the included `render.yaml` blueprint. Keep the repository root as the service root so npm workspaces and `packages/shared-types` are available.
-- Render uses `npm ci && npm run db:generate && npm run build:server`, runs `npm run db:migrate:deploy` before release, starts with `npm start`, and checks `/api/health`.
+- Render uses `npm ci && npm run db:generate && npm run db:migrate:deploy && npm run build:server`, starts with `npm start`, and checks `/api/health`. The migration runs during the build because the free Render plan does not provide a pre-deploy command.
 - Create the Vercel project from this repository with the repository root as its project root so `vercel.json` can select `apps/web` output. Alternatively set the equivalent commands manually.
 - Set `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `WEB_APP_URL`, and `PORT` as server-side platform environment variables.
 - Set `VITE_API_URL` and `VITE_SOCKET_URL` as web build environment variables before building.
