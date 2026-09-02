@@ -6,10 +6,13 @@
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "build": "turbo run build",
+    "build:server": "turbo run build --filter=@quizarena/server...",
     "dev": "turbo run dev",
+    "start": "npm run start --workspace=@quizarena/server",
     "typecheck": "turbo run typecheck",
     "db:generate": "npm run db:generate --workspace=@quizarena/server",
-    "db:migrate": "npm run db:migrate --workspace=@quizarena/server"
+    "db:migrate": "npm run db:migrate --workspace=@quizarena/server",
+    "db:migrate:deploy": "npm run db:migrate --workspace=@quizarena/server"
   },
   "devDependencies": { "turbo": "^2.3.3" }
 }

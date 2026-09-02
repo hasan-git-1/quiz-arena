@@ -112,6 +112,8 @@ Only the `VITE_*` values are bundled into the browser. Never place database URLs
 ```bash
 npm run typecheck    # Type-check every workspace
 npm run build        # Build shared types, server, and web app
+npm run build:server # Build the server and shared types for API hosting
+npm start            # Start the built server
 npm run db:generate  # Generate Prisma Client
 npm run db:migrate   # Apply committed migrations
 npm run dev          # Run workspace development servers
@@ -121,9 +123,16 @@ npm run dev          # Run workspace development servers
 
 The web client and realtime API are separate deployable services. A typical deployment uses Vercel for `apps/web` and Render or another Node-capable host for `apps/server`, with managed PostgreSQL and Redis services.
 
-For production:
+The repository includes provider configuration for the recommended split deployment:
 
-- Deploy only from this source repository and configure build roots/commands for the selected workspace.
+- `render.yaml` defines the Node web service, server-only build, Prisma migration release step, health check, and secret variable names.
+- `vercel.json` defines the Vite build output and rewrites browser routes such as `/join` to the SPA entry point.
+
+For a Render backend and Vercel frontend:
+
+- Create the Render service from this repository, or use the included `render.yaml` blueprint. Keep the repository root as the service root so npm workspaces and `packages/shared-types` are available.
+- Render uses `npm ci && npm run db:generate && npm run build:server`, runs `npm run db:migrate:deploy` before release, starts with `npm start`, and checks `/api/health`.
+- Create the Vercel project from this repository with the repository root as its project root so `vercel.json` can select `apps/web` output. Alternatively set the equivalent commands manually.
 - Set `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `WEB_APP_URL`, and `PORT` as server-side platform environment variables.
 - Set `VITE_API_URL` and `VITE_SOCKET_URL` as web build environment variables before building.
 - Run `npm run db:migrate` in the server release/deploy step before starting the server.
