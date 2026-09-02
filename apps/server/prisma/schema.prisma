@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Teacher {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  quizzes      Quiz[]
+  createdAt    DateTime @default(now())
+}
+
+model Quiz {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  teacherId   String
+  teacher     Teacher    @relation(fields: [teacherId], references: [id])
+  questions   Question[]
+  games       Game[]
+  isPublic    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Question {
+  id           String @id @default(cuid())
+  quizId       String
+  quiz         Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  text         String
+  imageUrl     String?
+  options      Json
+  timeLimitSec Int    @default(20)
+  points       Int    @default(1000)
+  orderIndex   Int
+}
+
+model Game {
+  id        String     @id @default(cuid())
+  pin       String     @unique
+  quizId    String
+  quiz      Quiz       @relation(fields: [quizId], references: [id])
+  status    GameStatus @default(LOBBY)
+  startedAt DateTime?
+  endedAt   DateTime?
+  players   Player[]
+  createdAt DateTime   @default(now())
+}
+
+model Player {
+  id         String         @id @default(cuid())
+  gameId     String
+  game       Game           @relation(fields: [gameId], references: [id])
+  nickname   String
+  socketId   String?
+  totalScore Int            @default(0)
+  streak     Int            @default(0)
+  answers    PlayerAnswer[]
+  joinedAt   DateTime       @default(now())
+
+  @@unique([gameId, nickname])
+}
+
+model PlayerAnswer {
+  id             String   @id @default(cuid())
+  playerId       String
+  player         Player   @relation(fields: [playerId], references: [id])
+  questionId     String
+  selectedOption Int
+  isCorrect      Boolean
+  timeTakenMs    Int
+  pointsAwarded  Int
+  answeredAt     DateTime @default(now())
+}
+
+enum GameStatus {
+  LOBBY
+  QUESTION_SHOW
+  ANSWER_COLLECT
+  ANSWER_REVEAL
+  LEADERBOARD
+  FINAL_PODIUM
+  ENDED
+}
