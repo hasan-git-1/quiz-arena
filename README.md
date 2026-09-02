@@ -8,6 +8,7 @@ QuizArena is a real-time classroom quiz platform. Teachers create and host quizz
 - Quiz authoring with descriptions, ordered questions, images, answer options, time limits, and points
 - Hosted games with collision-resistant six-digit PINs and QR-code join links
 - Student lobby and nickname validation
+- Public student entry at `/` with no account required; teacher signup and login are available at `/teacher/signup` and `/teacher/login`
 - Real-time game phases, answer collection, answer reveals, scoring, streaks, leaderboards, and final podiums
 - Redis-backed live game state with PostgreSQL persistence for application data
 - Shared TypeScript event and API contracts in a workspace package
