@@ -51,6 +51,6 @@ app.use((error: unknown, _request: express.Request, response: express.Response, 
   response.status(500).json({ error: "An unexpected server error occurred." });
 });
 
-httpServer.listen(env.PORT, () => {
+httpServer.listen(env.PORT, "0.0.0.0", () => {
   console.log(`QuizArena server listening on http://localhost:${env.PORT}`);
 });
