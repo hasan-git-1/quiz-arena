@@ -121,7 +121,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 
 /* Shared non-podium application surfaces use the centralized Quiz Khelo tokens. */
 .teacher-dashboard, .lobby-screen, .game-host { background: var(--color-page); color: var(--color-ink); }
-.teacher-dashboard::before, .lobby-screen::before, .game-host::before { position: fixed; inset: 0; z-index: -1; content: ""; background: linear-gradient(135deg, var(--color-page) 0%, var(--color-page-alt) 52%, var(--color-page-warm) 100%); pointer-events: none; }
+.teacher-dashboard::before, .lobby-screen::before, .game-host::before { position: fixed; inset: 0; z-index: -1; content: ""; background: linear-gradient(135deg, var(--color-page) 0%, var(--color-page-raised) 52%, var(--color-page-deep) 100%); pointer-events: none; }
 .teacher-dashboard h1, .teacher-dashboard h2, .lobby-screen h1, .lobby-screen h2 { color: var(--color-ink); }
 .teacher-dashboard p, .lobby-screen p, .game-host p { color: var(--color-muted); }
 .teacher-dashboard .teacher-panel, .lobby-screen .teacher-panel, .game-host .teacher-panel, .qr-card { background: var(--color-surface); border-color: var(--color-border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
@@ -228,6 +228,38 @@ body { background: var(--color-page-deep); }
 @keyframes lobby-player-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes leaderboard-row-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .timer-ring, .student-question-card, .student-answer-stage .student-answer, .feedback-mark, .podium-stage, .podium-rank-1, .podium-rank-2, .podium-rank-3, .podium-rest, .lobby-players li, .leaderboard li, .student-leaderboard li { animation: none; opacity: 1; } }
+
+/* Final mobile readability guardrails. */
+.student-game-screen, .student-answer-stage, .student-panel, .student-question-card, .answer-grid, .student-answer, .student-leaderboard, .student-leaderboard li, .lobby-screen, .lobby-grid, .game-host-board, .host-question, .host-option, .leaderboard { min-width: 0; }
+.student-game-screen { width: 100%; overflow-x: hidden; }
+.student-header span, .student-stage-info span, .student-message, .student-panel p, .student-panel h1, .student-panel h2, .student-question-card h2, .student-answer .answer-label, .host-option strong, .host-option small, .lobby-pin-card code, .teacher-notice { overflow-wrap: anywhere; word-break: normal; }
+.student-panel h1, .student-panel h2, .student-question-card h2 { max-width: 100%; }
+.student-answer { width: 100%; min-width: 0; min-height: 8rem; }
+.student-answer .answer-label { display: block; width: 100%; padding: 0 .15rem; text-align: center; }
+.student-answer .answer-symbol { flex: 0 0 auto; }
+.student-stage-info { min-height: 4.5rem; gap: .75rem; }
+.student-stage-info > span { max-width: calc(100% - 5.25rem); }
+.timer-ring { flex: 0 0 4.4rem; }
+.feedback-mark { flex: 0 0 auto; }
+.lobby-header h1 { overflow-wrap: anywhere; }
+.lobby-header .teacher-link { flex: 0 0 auto; text-align: right; }
+.host-options, .student-leaderboard ol, .leaderboard ol, .podium-rest { min-width: 0; }
+.host-option { min-width: 0; }
+.host-option strong, .host-option small { min-width: 0; }
+.student-game-screen > section, .game-host-board > section, .lobby-grid > section { margin-top: 0; }
+.student-game-screen button, .game-host button, .lobby-screen button { min-height: 2.75rem; line-height: 1.2; }
+.student-game-screen button, .game-host button, .lobby-screen button, .teacher-dashboard button { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+	.student-answer-stage { width: 100%; padding: .25rem 0; }
+	.student-question-card { padding: 1rem .85rem; }
+	.student-question-card h2 { font-size: clamp(1.2rem, 5.6vw, 1.6rem); }
+	.student-answer { min-height: 7.5rem; border-radius: 1rem; }
+	.host-options { gap: .55rem; }
+	.host-option { grid-template-columns: 1.7rem minmax(0, 1fr); gap: .5rem; padding: .65rem; }
+	.host-option small { grid-column: 2; }
+	.lobby-header { flex-wrap: wrap; }
+	.lobby-header > div { min-width: 0; }
+}
 
 /* Student entry screen */
 .join-screen { position: relative; isolation: isolate; overflow: hidden; max-width: none; padding: clamp(2rem, 7vw, 5rem) 1.25rem; background: #f5f8f7; color: #173331; }
