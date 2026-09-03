@@ -11,6 +11,7 @@ import type {
   StudentGameView,
   SubmitAnswerResult,
 } from "@quizarena/shared-types";
+import { Button, Card, Input, PageContainer } from "./ui";
 
 const socketUrl = import.meta.env.VITE_SOCKET_URL ?? "http://localhost:3001";
 const answerStyles = ["triangle", "diamond", "circle", "square"] as const;
@@ -123,7 +124,7 @@ export function JoinLobby() {
   const showAnswers = status === "ANSWER_COLLECT" && currentQuestion !== null;
   const isLocked = selectedOption !== null;
 
-  if (!lobby) return <main className="join-screen"><section className="teacher-panel join-panel"><p className="eyebrow">QUIZ KHELO</p><h1>Join a live quiz</h1><p>Enter the PIN shown by your teacher.</p><form onSubmit={join}><label>Game PIN<input inputMode="numeric" maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" autoFocus /></label><label>Nickname<input value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={30} placeholder="Your name" /></label>{message && <p className="form-error">{message}</p>}<button className="teacher-primary" disabled={joining}>{joining ? "Joining..." : "Join game"}</button></form><a className="teacher-link" href="/teacher">Teacher sign up or log in</a></section></main>;
+  if (!lobby) return <PageContainer className="join-screen"><Card className="teacher-panel join-panel"><p className="eyebrow">QUIZ KHELO</p><h1>Join a live quiz</h1><p>Enter the PIN shown by your teacher.</p><form onSubmit={join}><label>Game PIN<Input inputMode="numeric" maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" autoFocus /></label><label>Nickname<Input value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={30} placeholder="Your name" /></label>{message && <p className="form-error">{message}</p>}<Button disabled={joining}>{joining ? "Joining..." : "Join game"}</Button></form><a className="teacher-link" href="/teacher">Teacher sign up or log in</a></Card></PageContainer>;
 
   return <main className="student-game-screen">
     <header className="student-header"><span>QUIZ KHELO</span><strong>{seconds !== null ? `${seconds}s` : `${lobby.players.length} players`}</strong></header>
