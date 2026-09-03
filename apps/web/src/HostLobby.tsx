@@ -36,6 +36,7 @@ function FinalPodium({ entries }: { entries: LeaderboardEntry[] }) {
         <div className="podium-plinth"><span>#{entry.rank}</span></div>
       </article>)}
     </div>
+    <ol className="podium-rest" aria-label="Remaining leaderboard">{entries.slice(3).map((entry) => <li key={entry.playerId}><span>#{entry.rank} {entry.nickname}</span><strong>{entry.score}</strong></li>)}</ol>
     {!topThree.length && <p className="podium-empty">No scores were recorded for this game.</p>}
   </section>;
 }
