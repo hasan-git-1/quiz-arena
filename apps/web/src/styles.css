@@ -261,6 +261,39 @@ body { background: var(--color-page-deep); }
 	.lobby-header > div { min-width: 0; }
 }
 
+/* Live-question rendering safeguards: both phases keep the same final footprint. */
+.student-question-preview, .student-question-card, .host-question { position: relative; z-index: 1; overflow: visible; }
+.student-question-preview h1, .student-question-card h2, .host-question h2 { position: relative; z-index: 2; color: var(--color-ink); opacity: 1; overflow-wrap: anywhere; }
+.student-question-preview h1 { min-height: 2.4rem; }
+.student-question-preview, .student-answer-stage { width: 100%; min-width: 0; }
+.student-option-preview { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; min-height: 8.4rem; }
+.student-option-preview-item { position: relative; display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-content: center; min-width: 0; min-height: 3.8rem; overflow: visible; }
+.student-option-preview-item .answer-symbol { width: 1.5rem; height: 1.5rem; min-width: 1.5rem; min-height: 1.5rem; transform: none !important; }
+.student-option-preview-item.triangle .answer-symbol { width: 0; min-width: 0; height: 0; min-height: 0; border-width: 0 .75rem 1.3rem; }
+.student-option-preview-item.diamond .answer-symbol { transform: rotate(45deg) !important; }
+.student-option-preview-item strong { min-width: 0; color: #fff; font-size: clamp(.9rem, 3.4vw, 1.1rem); overflow-wrap: anywhere; }
+.student-question-card { min-height: 5rem; }
+.student-question-card h2 { margin: 0; }
+.student-answer-stage .student-answer { position: relative; z-index: 1; min-width: 0; opacity: 1; animation-name: safe-option-enter; animation-fill-mode: both; }
+.student-answer-stage .student-answer .answer-symbol { position: relative; z-index: 2; display: block; grid-row: 1; width: 1.7rem; height: 1.7rem; min-width: 1.7rem; min-height: 1.7rem; }
+.student-answer-stage .student-answer .answer-label { position: relative; z-index: 2; display: block; min-width: 0; opacity: 1; overflow-wrap: anywhere; }
+@keyframes safe-option-enter { from { opacity: .94; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.student-question-card { opacity: 1; animation-name: safe-question-enter; }
+@keyframes safe-question-enter { from { opacity: 1; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.feedback { position: relative; z-index: 1; overflow: visible; }
+.feedback h1, .feedback p, .feedback .rank-card { position: relative; z-index: 2; }
+.game-host-board, .game-host-board > section { min-width: 0; }
+.host-question h2, .host-option strong, .host-option small { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+	.student-question-preview { min-height: 0; }
+	.student-option-preview { min-height: 7.8rem; gap: .55rem; }
+	.student-option-preview-item { grid-template-columns: 1.65rem minmax(0, 1fr); min-height: 3.6rem; padding: .55rem; }
+	.student-option-preview-item .answer-symbol { width: 1.25rem; height: 1.25rem; min-width: 1.25rem; min-height: 1.25rem; }
+	.student-option-preview-item.triangle .answer-symbol { width: 0; min-width: 0; height: 0; min-height: 0; border-width: 0 .62rem 1.1rem; }
+	.student-option-preview-item strong { font-size: .86rem; }
+	.student-question-card { min-height: 4.5rem; }
+}
+
 /* Student entry screen */
 .join-screen { position: relative; isolation: isolate; overflow: hidden; max-width: none; padding: clamp(2rem, 7vw, 5rem) 1.25rem; background: #f5f8f7; color: #173331; }
 .join-screen::before { position: absolute; inset: 0; z-index: -2; content: ""; background: linear-gradient(135deg, #f5f8f7 0%, #eaf3f0 52%, #fff7ef 100%); }
