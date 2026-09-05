@@ -20,12 +20,12 @@ export function JoinScreen({ pin, nickname, onPinChange, onNicknameChange, onSub
 
   return (
     <main className="join-entrance">
-      <div className="join-backdrop">
+      <div className="join-backdrop" aria-hidden="true">
         <div className="join-bg-mesh"></div>
+        <div className="join-bg-waves"></div>
         <div className="join-bg-particles"></div>
-        <div className="join-bg-glow orb-1"></div>
-        <div className="join-bg-glow orb-2"></div>
-        <div className="join-bg-glow orb-3"></div>
+        <div className="join-bg-depth depth-one"></div>
+        <div className="join-bg-depth depth-two"></div>
       </div>
       <div className="join-card">
         <div className="card-outer-glow"></div>
@@ -52,7 +52,7 @@ export function JoinScreen({ pin, nickname, onPinChange, onNicknameChange, onSub
                   onClearError();
                 }
               }}
-              onFocus={() => setPinTouched(true)}
+              onFocus={onClearError}
               onBlur={() => setPinTouched(true)}
               className={pinError ? "field-input error" : "field-input"}
               placeholder="123456"

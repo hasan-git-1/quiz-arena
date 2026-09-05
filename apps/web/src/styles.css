@@ -57,7 +57,11 @@
 	--radius-cta: 14px;
 	--motion-entrance: 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
 	--motion-cta: 0.22s ease-out;
-	font-family: var(--font-body); color: var(--color-ink); background: var(--color-page-deep);
+	font-family: var(--font-body);
+	color: var(--color-ink);
+	background: var(--color-page-deep);
+}
+
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: var(--color-page-deep); }
 .ui-page { max-width: 680px; min-height: 100vh; margin: 0 auto; }
@@ -477,10 +481,18 @@ body { background: var(--color-page-deep); }
 	inset: 0;
 	display: grid;
 	place-items: center;
-	min-height: 100vh;
+	min-height: 100svh;
+	padding: 24px;
 	font-family: var(--font-inter);
-	background: linear-gradient(165deg, var(--color-page-premium) 0%, var(--color-page-premium-deep) 100%);
+	background: #020b3d;
 	overflow: hidden;
+}
+
+.join-entrance::before {
+	position: absolute;
+	inset: 0;
+	content: "";
+	background: radial-gradient(ellipse at 50% 46%, rgba(47, 87, 220, .2), transparent 48%), linear-gradient(135deg, #020b3d, #03104a 55%, #020936);
 }
 
 .join-backdrop {
@@ -493,37 +505,40 @@ body { background: var(--color-page-deep); }
 
 .join-bg-mesh {
 	position: absolute;
-	inset: 0;
-	background:
-		radial-gradient(circle at 25% 30%, rgba(67, 97, 238, 0.12) 0%, transparent 45%),
-		radial-gradient(circle at 75% 70%, rgba(123, 92, 255, 0.08) 0%, transparent 50%),
-		radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 40%);
-	animation: bg-flow 30s ease-in-out infinite alternate;
+	inset: -20%;
+	background: radial-gradient(ellipse at 50% 45%, rgba(67, 97, 238, .2) 0, transparent 32%), radial-gradient(ellipse at 12% 12%, rgba(29, 78, 216, .18), transparent 34%), radial-gradient(ellipse at 92% 88%, rgba(124, 58, 237, .14), transparent 35%);
+	animation: bg-flow 32s ease-in-out infinite alternate;
+}
+
+.join-bg-waves {
+	position: absolute;
+	inset: -15%;
+	opacity: .28;
+	background: repeating-radial-gradient(ellipse at 50% 55%, transparent 0 88px, rgba(106, 151, 255, .09) 89px 90px, transparent 91px 148px);
+	transform: rotate(-12deg) skewY(-5deg);
+	animation: wave-drift 38s ease-in-out infinite alternate;
 }
 
 .join-bg-particles {
 	position: absolute;
 	inset: 0;
-	background-image:
-		radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 2px),
-		radial-gradient(circle, rgba(123, 92, 255, 0.03) 1px, transparent 2px);
-	background-size: 32px 32px, 48px 48px;
-	background-position: 0 0, 16px 16px;
-	opacity: 0.6;
-	animation: particles-drift 60s linear infinite;
+	background-image: radial-gradient(circle, rgba(153, 190, 255, .16) 1px, transparent 1.5px), radial-gradient(circle, rgba(255, 255, 255, .08) 1px, transparent 1.5px);
+	background-size: 47px 47px, 83px 83px;
+	background-position: 8px 14px, 31px 22px;
+	opacity: .45;
+	animation: particles-drift 75s linear infinite;
 }
 
-.join-bg-glow {
+.join-bg-depth {
 	position: absolute;
+	width: min(62vw, 760px);
+	aspect-ratio: 1;
+	border: 1px solid rgba(114, 156, 255, .07);
 	border-radius: 50%;
-	opacity: 0.5;
-	filter: blur(80px);
-	animation: glow-pulse 8s ease-in-out infinite;
+	box-shadow: 0 0 0 70px rgba(114, 156, 255, .018), 0 0 0 140px rgba(114, 156, 255, .012);
 }
-
-.orb-1 { width: 420px; height: 420px; top: 15%; left: 10%; background: rgba(67, 97, 238, 0.12); }
-.orb-2 { width: 340px; height: 340px; bottom: 20%; right: 15%; background: rgba(123, 92, 255, 0.08); animation-duration: 10s; }
-.orb-3 { width: 280px; height: 280px; top: 55%; left: 50%; transform: translateX(-50%); background: rgba(56, 189, 248, 0.06); animation-duration: 12s; }
+.depth-one { top: -35%; left: -18%; }
+.depth-two { right: -23%; bottom: -42%; }
 
 @keyframes bg-flow {
 	0% { background-position: 0% 50%, 100% 50%, 50% 0%; }
@@ -531,26 +546,25 @@ body { background: var(--color-page-deep); }
 }
 
 @keyframes particles-drift {
-	0% { background-position: 0 0, 0 0; }
-	100% { background-position: 2000px 2000px, 2000px 2000px; }
+	0% { background-position: 8px 14px, 31px 22px; }
+	100% { background-position: 900px 620px, -700px 840px; }
 }
 
-@keyframes glow-pulse {
-	0%, 100% { opacity: 0.45; transform: scale(1); }
-	50% { opacity: 0.6; transform: scale(1.05); }
+@keyframes wave-drift {
+	from { transform: rotate(-12deg) skewY(-5deg) translate3d(-2%, -1%, 0); }
+	to { transform: rotate(-8deg) skewY(-3deg) translate3d(2%, 1%, 0); }
 }
 
 .join-card {
 	position: relative;
 	z-index: 10;
-	width: min(100% - 40px, 580px);
-	background: var(--color-card-bg);
-	border: 1px solid var(--color-card-border);
-	border-radius: var(--radius-card-premium);
-	padding: 48px;
-	box-shadow: var(--shadow-card-premium);
+	width: min(100%, 600px);
+	padding: 52px;
+	background: linear-gradient(145deg, #fff 0%, #fbfcfd 72%, #f5f7ff 100%);
+	border: 1px solid rgba(218, 225, 247, .8);
+	border-radius: 26px;
+	box-shadow: 0 30px 90px rgba(0, 4, 35, .48), 0 0 54px rgba(71, 110, 240, .17);
 	animation: card-entrance var(--motion-entrance) both;
-	backdrop-filter: none;
 }
 
 .card-outer-glow {
@@ -586,22 +600,22 @@ body { background: var(--color-page-deep); }
 
 .brand-label {
 	font-family: var(--font-inter);
-	font-size: 0.72rem;
-	font-weight: 700;
-	letter-spacing: 0.25em;
-	color: var(--color-navy-premium);
+	font-size: .75rem;
+	font-weight: 750;
+	letter-spacing: .28em;
+	color: #344b70;
 	text-transform: uppercase;
-	margin: 0 0 24px 0;
+	margin: 0 0 30px;
 }
 
 .join-heading {
 	font-family: var(--font-inter);
-	font-size: clamp(2.4rem, 7vw, 3.4rem);
+	font-size: clamp(2.8rem, 7vw, 4rem);
 	font-weight: 850;
-	color: var(--color-text-primary);
-	line-height: 1;
-	margin: 0 0 16px 0;
-	letter-spacing: -.03em;
+	color: #0c193f;
+	line-height: .98;
+	margin: 0 0 18px;
+	letter-spacing: -.055em;
 }
 
 .join-heading .heading-accent {
@@ -612,37 +626,37 @@ body { background: var(--color-page-deep); }
 .join-description {
 	font-family: var(--font-inter);
 	font-size: 1.05rem;
-	color: var(--color-text-secondary);
+	color: #60708e;
 	line-height: 1.55;
-	margin: 0 0 32px 0;
+	margin: 0 0 34px;
 }
 
 .field-group {
 	display: grid;
-	gap: 6px;
+	gap: 8px;
 	margin-bottom: 20px;
 }
 
 .field-label {
 	font-family: var(--font-inter);
-	font-size: 0.8rem;
-	font-weight: 700;
-	color: var(--color-navy-premium);
-	letter-spacing: 0.03em;
+	font-size: .82rem;
+	font-weight: 750;
+	color: #17345d;
+	letter-spacing: .02em;
 }
 
 .field-input {
 	width: 100%;
 	height: 62px;
-	padding: 0 16px;
+	padding: 0 18px;
 	font-family: var(--font-inter);
-	font-size: 1.15rem;
+	font-size: 1.12rem;
 	font-weight: 700;
-	color: var(--color-text-primary);
-	background: var(--color-input-bg);
-	border: 1.5px solid var(--color-input-border);
-	border-radius: var(--radius-input);
-	transition: var(--motion-fast);
+	color: #0c193f;
+	background: #fff;
+	border: 1px solid #cbd5e7;
+	border-radius: 12px;
+	transition: border-color var(--motion-fast), box-shadow var(--motion-fast), background var(--motion-fast);
 }
 
 .field-input::placeholder {
@@ -723,12 +737,12 @@ body { background: var(--color-page-deep); }
 	display: block;
 	text-align: center;
 	font-family: var(--font-inter);
-	font-size: 0.9rem;
-	color: var(--color-navy-premium);
+	font-size: .9rem;
+	color: #4167b2;
 	text-decoration: none;
-	margin-top: 24px;
-	font-weight: 600;
-	transition: color 0.2s ease;
+	margin-top: 26px;
+	font-weight: 650;
+	transition: color .2s ease, text-decoration-color .2s ease;
 }
 
 .secondary-link:hover {
@@ -738,16 +752,22 @@ body { background: var(--color-page-deep); }
 }
 
 @media (max-width: 768px) {
-	.join-card { width: min(100% - 32px, 560px); padding: 40px; }
-	.join-heading { font-size: clamp(2rem, 8vw, 2.8rem); }
+	.join-entrance { padding: 20px; }
+	.join-card { width: 100%; padding: 40px; }
+	.join-heading { font-size: clamp(2.6rem, 9vw, 3.4rem); }
+	.join-bg-waves { opacity: .16; }
+	.join-bg-depth { width: 90vw; }
 }
 
 @media (max-width: 480px) {
-	.join-entrance { padding: 0 16px; }
-	.join-card { width: 100%; padding: 36px 24px; border-radius: 20px; }
-	.brand-badge { width: 56px; height: 56px; font-size: 1.2rem; }
-	.join-heading { font-size: clamp(1.9rem, 9vw, 2.5rem); }
-	.field-input, .cta-button { height: 56px; font-size: 1rem; }
+	.join-entrance { padding: 16px; }
+	.join-card { padding: 32px 24px; border-radius: 22px; }
+	.brand-badge { width: 58px; height: 58px; font-size: 1.2rem; }
+	.brand-label { margin-bottom: 24px; }
+	.join-heading { font-size: clamp(2.35rem, 12vw, 3rem); }
+	.join-description { margin-bottom: 28px; }
+	.field-input, .cta-button { height: 58px; font-size: 1rem; }
+	.join-bg-particles { opacity: .24; }
 }
 
 @media (prefers-reduced-motion: reduce) {
