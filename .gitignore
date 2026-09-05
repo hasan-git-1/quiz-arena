@@ -18,3 +18,7 @@ Thumbs.db
 
 # Generated Prisma artifacts
 apps/server/src/generated/
+
+# Editor and local configuration
+.vscode/
+.idea/
