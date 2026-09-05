@@ -13,6 +13,7 @@ import type {
   SubmitAnswerResult,
 } from "@quizarena/shared-types";
 import { Button, Card, Input, LeaderboardSection, PageContainer } from "./ui";
+import { JoinScreen } from "./JoinScreen";
 
 const socketUrl = import.meta.env.VITE_SOCKET_URL ?? "http://localhost:3001";
 const answerStyles = ["triangle", "diamond", "circle", "square"] as const;
@@ -182,7 +183,7 @@ export function JoinLobby() {
     : "urgency-low"
     : "";
 
-  if (!lobby) return <PageContainer className="join-screen"><Card className="teacher-panel join-panel"><p className="eyebrow">QUIZ KHELO</p><h1>Join a live quiz</h1><p>Enter the PIN shown by your teacher.</p><form onSubmit={join}><label>Game PIN<Input inputMode="numeric" maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" autoFocus /></label><label>Nickname<Input value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={30} placeholder="Your name" /></label>{message && <p className="form-error">{message}</p>}<Button disabled={joining}>{joining ? "Joining..." : "Join game"}</Button></form><a className="teacher-link" href="/teacher">Teacher sign up or log in</a></Card></PageContainer>;
+  if (!lobby) return <JoinScreen pin={pin} nickname={nickname} onPinChange={setPin} onNicknameChange={setNickname} onSubmit={join} message={message} joining={joining} onClearError={() => setMessage(null)} />;
 
   return <main className="student-game-screen">
     {countdown && countdown.visible && <CountdownOverlay value={countdown.value} key={countdown.value} />}
