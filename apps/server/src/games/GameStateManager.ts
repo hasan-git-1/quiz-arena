@@ -13,9 +13,8 @@ import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 
 const LIVE_GAME_TTL_SECONDS = 60 * 60 * 12;
-const QUESTION_SHOW_DURATION_MS = 4_000;
-const COUNTDOWN_END_MS = 3_000;
-const COUNTDOWN_START_MS = 1_000;
+const QUESTION_SHOW_DURATION_MS = 5_000;
+const COUNTDOWN_TICK_MS = 1_250;
 
 const optionSchema = z.object({ text: z.string(), isCorrect: z.boolean() });
 const questionSchema = z.object({
@@ -300,11 +299,11 @@ export class GameStateManager {
   private async scheduleCountdown(state: StoredGameState): Promise<void> {
     if (!state.collectionStartsAtMs) return;
     const pin = this.pin;
-    const countdownEnd = state.collectionStartsAtMs - COUNTDOWN_END_MS;
-    const ticks: { value: 3 | 2 | 1; atMs: number }[] = [
-      { value: 3, atMs: countdownEnd - 2_000 },
-      { value: 2, atMs: countdownEnd - 1_000 },
-      { value: 1, atMs: countdownEnd },
+    const ticks: { value: 3 | 2 | 1 | "START"; atMs: number }[] = [
+      { value: 3, atMs: state.collectionStartsAtMs - COUNTDOWN_TICK_MS * 4 },
+      { value: 2, atMs: state.collectionStartsAtMs - COUNTDOWN_TICK_MS * 3 },
+      { value: 1, atMs: state.collectionStartsAtMs - COUNTDOWN_TICK_MS * 2 },
+      { value: "START", atMs: state.collectionStartsAtMs - COUNTDOWN_TICK_MS },
     ];
     let goTimer: NodeJS.Timeout | null = null;
     for (const tick of ticks) {
@@ -322,7 +321,7 @@ export class GameStateManager {
     goTimer = setTimeout(async () => {
       const current = await this.getStoredState();
       if (current.status !== "QUESTION_SHOW") return;
-      await this.publish("countdown", current, { value: 3, visible: false });
+      await this.publish("countdown", current, { value: "START", visible: false });
     }, goDelay);
     this.countdownTicks.set(`${pin}:go`, goTimer);
   }

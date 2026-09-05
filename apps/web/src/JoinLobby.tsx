@@ -18,11 +18,11 @@ import { JoinScreen } from "./JoinScreen";
 const socketUrl = import.meta.env.VITE_SOCKET_URL ?? "http://localhost:3001";
 const answerStyles = ["triangle", "diamond", "circle", "square"] as const;
 
-function CountdownOverlay({ value }: { value: 3 | 2 | 1 }) {
+function CountdownOverlay({ value }: { value: CountdownTick["value"] }) {
   return (
     <div className="countdown-overlay">
-      <div className="countdown-number" key={value}>
-        {value}
+      <div className={`countdown-number ${value === "START" ? "countdown-start" : ""}`} key={value}>
+        {value === "START" ? "Start!" : value}
       </div>
     </div>
   );
@@ -140,7 +140,7 @@ export function JoinLobby() {
     let timeout: number | undefined;
     if (countdown) {
       if (countdown.visible) {
-        timeout = window.setTimeout(() => setCountdown(null), 1000);
+        timeout = window.setTimeout(() => setCountdown(null), 1250);
       }
     }
     return () => { if (timeout) window.clearTimeout(timeout); };
@@ -190,7 +190,7 @@ export function JoinLobby() {
     <header className="student-header"><span>QUIZ KHELO</span><strong ref={timerRef} className={seconds !== null ? `timer-ring ${urgencyClass}` : ""}>{seconds !== null ? `${seconds}s` : `${lobby.players.length} players`}</strong></header>
     {status === "LOBBY" && <section className={`student-panel student-wait ${joinConfirmed ? "join-confirm-flash" : ""}`}><p className="eyebrow">YOU ARE IN</p><h1>Hi, {nickname || "player"}!</h1><p>Watch the shared screen. The teacher will start the quiz shortly.</p><div className="student-player-count">{lobby.players.length} players joined</div><div className="join-player-list">{lobby.players.map((player, index) => <div className="join-player" key={player.id} style={{ animationDelay: `${index * 0.05}s` }}><span className="join-player-avatar">{player.nickname.charAt(0).toUpperCase()}</span><span className="join-player-name">{player.nickname}</span>{player.id === playerId && <span className="join-player-you">YOU</span>}</div>)}</div></section>}
     {status === "QUESTION_SHOW" && currentQuestion && <section className="student-panel student-question-preview"><p className="eyebrow">QUESTION {(currentQuestion.index ?? 0) + 1} OF {currentQuestion.totalQuestions}</p><h1>{currentQuestion.text}</h1>{currentQuestion.imageUrl && <img src={currentQuestion.imageUrl} alt="Question illustration" />}<div className="student-option-preview">{currentQuestion.options.map((option, index) => <div className={`student-option-preview-item ${answerStyles[index]}`} key={`${option.text}-${index}`}><span className="answer-symbol" aria-hidden="true" /><strong>{option.text}</strong></div>)}</div><p className="question-preview-note">Answer buttons unlock in a moment.</p></section>}
-    {showAnswers && <section className="student-answer-stage"><div className="student-stage-info"><span>Question {currentQuestion.index + 1} / {currentQuestion.totalQuestions}</span><strong className={`timer-ring ${urgencyClass}`}>{seconds}s</strong></div><article className="student-question-card"><h2>{currentQuestion.text}</h2>{currentQuestion.imageUrl && <img src={currentQuestion.imageUrl} alt="Question illustration" />}</article><div className={`answer-grid answer-grid-${currentQuestion.optionCount}`}>{answerStyles.slice(0, currentQuestion.optionCount).map((shape, index) => <button className={`student-answer ${shape} answer-option-${index + 1} ${selectedOption === index ? "selected" : ""}`} key={shape} onClick={() => submitAnswer(index)} disabled={isLocked} aria-label={`Answer option ${index + 1}: ${currentQuestion.options[index]?.text ?? ""}`}><span className="answer-symbol" aria-hidden="true" /><span className="answer-label">{currentQuestion.options[index]?.text}</span></button>)}</div>{isLocked && <div className="student-panel answer-locked"><p className="eyebrow">ANSWER LOCKED</p><p>Your answer was securely sent to the server.</p></div>}</section>}
+    {showAnswers && <section className="student-answer-stage"><div className="student-stage-info"><span>Question {currentQuestion.index + 1} / {currentQuestion.totalQuestions}</span></div><article className="student-question-card"><h2>{currentQuestion.text}</h2>{currentQuestion.imageUrl && <img src={currentQuestion.imageUrl} alt="Question illustration" />}</article><div className={`answer-grid answer-grid-${currentQuestion.optionCount}`}>{answerStyles.slice(0, currentQuestion.optionCount).map((shape, index) => <button className={`student-answer ${shape} answer-option-${index + 1} ${selectedOption === index ? "selected" : ""}`} key={shape} onClick={() => submitAnswer(index)} disabled={isLocked} aria-label={`Answer option ${index + 1}: ${currentQuestion.options[index]?.text ?? ""}`}><span className="answer-symbol" aria-hidden="true" /><span className="answer-label">{currentQuestion.options[index]?.text}</span></button>)}</div>{isLocked && <div className="student-panel answer-locked"><p className="eyebrow">ANSWER LOCKED</p><p>Your answer was securely sent to the server.</p></div>}</section>}
     {status === "ANSWER_REVEAL" && <section className={`student-panel feedback ${feedback?.isCorrect ? "correct" : "incorrect"}`}><span className="feedback-mark" aria-hidden="true">{feedback?.answered ? feedback.isCorrect ? "✓" : "×" : "!"}</span><p className="eyebrow">ANSWER REVEAL</p><h1>{feedback?.answered ? feedback.isCorrect ? "Correct!" : "Not this time" : "Time is up"}</h1><p>{feedback?.answered ? feedback.isCorrect ? `+${feedback.pointsAwarded} points` : "No points this round" : "You did not submit an answer."}</p>{feedback && <div className="rank-card"><span>Your score</span><strong>{feedback.totalScore}</strong><span>Rank #{feedback.rank}</span></div>}</section>}
     {status === "LEADERBOARD" && <section className="student-panel student-leaderboard"><p className="eyebrow">LEADERBOARD</p><h1>{ownLeaderboardEntry ? `You are #${ownLeaderboardEntry.rank}` : "Scores updated"}</h1><LeaderboardSection entries={gameState?.leaderboard ?? []} maxEntries={5} /><p>Watch the shared screen for the next question.</p></section>}
     {status === "FINAL_PODIUM" && <FinalPodium entries={gameState?.leaderboard ?? []} playerId={playerId} />}

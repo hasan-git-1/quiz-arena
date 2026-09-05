@@ -86,7 +86,7 @@ export interface StudentQuestionView {
 }
 
 export interface CountdownTick {
-  value: 3 | 2 | 1;
+  value: 3 | 2 | 1 | "START";
   visible: boolean;
 }
 

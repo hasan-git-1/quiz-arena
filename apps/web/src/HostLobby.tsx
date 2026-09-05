@@ -15,11 +15,11 @@ import { LeaderboardSection } from "./ui";
 
 const socketUrl = import.meta.env.VITE_SOCKET_URL ?? "http://localhost:3001";
 
-function CountdownOverlay({ value }: { value: 3 | 2 | 1 }) {
+function CountdownOverlay({ value }: { value: CountdownTick["value"] }) {
   return (
     <div className="countdown-overlay">
-      <div className="countdown-number" key={value}>
-        {value}
+      <div className={`countdown-number ${value === "START" ? "countdown-start" : ""}`} key={value}>
+        {value === "START" ? "Start!" : value}
       </div>
     </div>
   );
@@ -88,7 +88,7 @@ export function HostLobby({ game, teacherToken, onExit }: { game: HostedGame; te
     let timeout: number | undefined;
     if (countdown) {
       if (countdown.visible) {
-        timeout = window.setTimeout(() => setCountdown(null), 1000);
+        timeout = window.setTimeout(() => setCountdown(null), 1250);
       }
     }
     return () => { if (timeout) window.clearTimeout(timeout); };
@@ -123,7 +123,7 @@ export function HostLobby({ game, teacherToken, onExit }: { game: HostedGame; te
        <div className="game-status"><span>{status.replaceAll("_", " ")}</span>{seconds !== null && <strong className={`timer-ring ${seconds <= 5 ? "urgency-high" : seconds <= 10 ? "urgency-medium" : "urgency-low"}`}>{seconds}s</strong>}<small>{gameState?.playerCount ?? 0} players</small></div>
       {status === "FINAL_PODIUM" && <FinalPodium entries={gameState?.leaderboard ?? []} />}
       {status !== "FINAL_PODIUM" && question && <article className="teacher-panel host-question"><p className="eyebrow">QUESTION {(question.index ?? 0) + 1} OF {question.totalQuestions}</p><h2>{question.text}</h2>{question.imageUrl && <img src={question.imageUrl} alt="Question illustration" />}<div className="host-options">{question.options.map((option, index) => <div className={gameState?.correctOptionIndex === index ? "host-option correct" : "host-option"} key={`${option.text}-${index}`}><span>{index + 1}</span><strong>{option.text}</strong>{gameState?.answerCounts && <small>{gameState.answerCounts[index]} answers</small>}</div>)}</div></article>}
-      {status === "QUESTION_SHOW" && <p className="teacher-notice">Countdown running… answer buttons unlock in 3…2…1.</p>}
+      {status === "QUESTION_SHOW" && <p className="teacher-notice">Countdown running. Answer buttons unlock after Start!</p>}
       {status === "ANSWER_COLLECT" && <p className="teacher-notice">Answers are being collected. The countdown is owned by the server.</p>}
       {gameState?.leaderboard && status !== "FINAL_PODIUM" && <LeaderboardSection entries={gameState.leaderboard.slice(0, 10)} isHost={true} />}
       {nextLabel && <button className="teacher-primary" onClick={() => runAction("game:next")} disabled={busy}>{busy ? "Working…" : nextLabel}</button>}
