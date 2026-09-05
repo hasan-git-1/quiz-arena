@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type {
   AnswerFeedback,
+  CountdownTick,
   LeaderboardEntry,
   LiveGameState,
   LobbyPlayer,
@@ -12,7 +13,9 @@ import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 
 const LIVE_GAME_TTL_SECONDS = 60 * 60 * 12;
-const QUESTION_SHOW_DURATION_MS = 1_500;
+const QUESTION_SHOW_DURATION_MS = 4_000;
+const COUNTDOWN_END_MS = 3_000;
+const COUNTDOWN_START_MS = 1_000;
 
 const optionSchema = z.object({ text: z.string(), isCorrect: z.boolean() });
 const questionSchema = z.object({
@@ -53,11 +56,13 @@ const storedStateSchema = z.object({
   collectionStartsAtMs: z.number().int().positive().nullable().default(null),
   questionStartAtMs: z.number().int().positive().nullable().default(null),
   deadlineAtMs: z.number().int().positive().nullable().default(null),
+  prevScores: z.preprocess((value) => value !== null && typeof value === "object" && !Array.isArray(value) ? value : {}, z.record(z.number().int().nonnegative())).default({}),
+  prevRanks: z.preprocess((value) => value !== null && typeof value === "object" && !Array.isArray(value) ? value : {}, z.record(z.number().int().nonnegative())).default({}),
 });
 
 type StoredGameState = z.infer<typeof storedStateSchema>;
-type GameEventKind = "state" | "answer-submitted" | "answer-reveal" | "ended";
-export type GameEvent = { kind: GameEventKind; pin: string; state: StoredGameState };
+type GameEventKind = "state" | "answer-submitted" | "answer-reveal" | "ended" | "countdown";
+export type GameEvent = { kind: GameEventKind; pin: string; state: StoredGameState; countdown?: CountdownTick };
 type GameEventHandler = (event: GameEvent) => Promise<void> | void;
 
 const submitAnswerScript = `
@@ -136,6 +141,8 @@ export class GameStateManager {
       collectionStartsAtMs: null,
       questionStartAtMs: null,
       deadlineAtMs: null,
+      prevScores: {},
+      prevRanks: {},
     };
     await manager.save(state);
     this.managers.set(input.pin, manager);
@@ -176,6 +183,8 @@ export class GameStateManager {
       collectionStartsAtMs: now + QUESTION_SHOW_DURATION_MS,
       questionStartAtMs: null,
       deadlineAtMs: null,
+      prevScores: {},
+      prevRanks: {},
     };
     await this.save(next);
     await prisma.game.update({ where: { id: next.gameId }, data: { status: "QUESTION_SHOW", startedAt: new Date(now) } });
@@ -189,7 +198,7 @@ export class GameStateManager {
     return this.runTransition(async () => {
     const current = await this.getStoredState();
     if (current.status === "ANSWER_REVEAL") {
-      const next = { ...current, status: "LEADERBOARD" as const };
+      const next = this.snapshotLeaderboard({ ...current, status: "LEADERBOARD" as const });
       await this.save(next); await this.publish("state", next); return this.publicState(next);
     }
     if (current.status === "LEADERBOARD") {
@@ -198,7 +207,7 @@ export class GameStateManager {
         const next = this.questionShowState(current, nextIndex);
         await this.save(next); await this.publish("state", next); this.schedule(next); return this.publicState(next);
       }
-      const next = { ...current, status: "FINAL_PODIUM" as const };
+      const next = this.snapshotLeaderboard({ ...current, status: "FINAL_PODIUM" as const });
       await this.save(next); await this.publish("state", next); return this.publicState(next);
     }
     if (current.status === "FINAL_PODIUM") {
@@ -272,6 +281,8 @@ export class GameStateManager {
 
   private schedule(state: StoredGameState): void {
     if (this.timer) clearTimeout(this.timer);
+    this.countdownTicks.forEach((timer) => clearTimeout(timer));
+    this.countdownTicks.clear();
     const target = state.status === "QUESTION_SHOW" ? state.collectionStartsAtMs : state.status === "ANSWER_COLLECT" ? state.deadlineAtMs : null;
     if (!target) return;
     const delay = Math.max(0, target - Date.now());
@@ -279,10 +290,45 @@ export class GameStateManager {
       if (state.status === "QUESTION_SHOW") void this.beginAnswerCollection();
       if (state.status === "ANSWER_COLLECT") void this.revealAnswer();
     }, delay);
+    if (state.status === "QUESTION_SHOW" && state.collectionStartsAtMs) {
+      void this.scheduleCountdown(state);
+    }
   }
 
-  private async publish(kind: GameEventKind, state: StoredGameState): Promise<void> {
-    await GameStateManager.eventHandler?.({ kind, pin: this.pin, state });
+  private countdownTicks: Map<string, NodeJS.Timeout> = new Map();
+
+  private async scheduleCountdown(state: StoredGameState): Promise<void> {
+    if (!state.collectionStartsAtMs) return;
+    const pin = this.pin;
+    const countdownEnd = state.collectionStartsAtMs - COUNTDOWN_END_MS;
+    const ticks: { value: 3 | 2 | 1; atMs: number }[] = [
+      { value: 3, atMs: countdownEnd - 2_000 },
+      { value: 2, atMs: countdownEnd - 1_000 },
+      { value: 1, atMs: countdownEnd },
+    ];
+    let goTimer: NodeJS.Timeout | null = null;
+    for (const tick of ticks) {
+      const now = Date.now();
+      const delay = Math.max(0, tick.atMs - now);
+      const value = tick.value;
+      const tickTimer = setTimeout(async () => {
+        const current = await this.getStoredState();
+        if (current.status !== "QUESTION_SHOW" || current.collectionStartsAtMs !== state.collectionStartsAtMs) return;
+        await this.publish("countdown", current, { value, visible: true });
+      }, delay);
+      this.countdownTicks.set(`${pin}:tick:${tick.value}`, tickTimer);
+    }
+    const goDelay = Math.max(0, state.collectionStartsAtMs - Date.now());
+    goTimer = setTimeout(async () => {
+      const current = await this.getStoredState();
+      if (current.status !== "QUESTION_SHOW") return;
+      await this.publish("countdown", current, { value: 3, visible: false });
+    }, goDelay);
+    this.countdownTicks.set(`${pin}:go`, goTimer);
+  }
+
+  private async publish(kind: GameEventKind, state: StoredGameState, countdown?: CountdownTick): Promise<void> {
+    await GameStateManager.eventHandler?.({ kind, pin: this.pin, state, countdown });
   }
 
   private async getStoredState(): Promise<StoredGameState> {
@@ -318,7 +364,26 @@ export class GameStateManager {
   }
 
   private leaderboard(state: StoredGameState): LeaderboardEntry[] {
-    return [...state.players].sort((left, right) => right.totalScore - left.totalScore || left.nickname.localeCompare(right.nickname)).map((player, index) => ({ rank: index + 1, playerId: player.id, nickname: player.nickname, score: player.totalScore }));
+    const entries = [...state.players].sort((left, right) => right.totalScore - left.totalScore || left.nickname.localeCompare(right.nickname)).map((player, index) => ({
+      rank: index + 1,
+      playerId: player.id,
+      nickname: player.nickname,
+      score: player.totalScore,
+      prevRank: state.prevRanks[player.id] ?? null,
+      scoreDelta: player.totalScore - (state.prevScores[player.id] ?? 0),
+    }));
+    return entries;
+  }
+
+  private snapshotLeaderboard(state: StoredGameState): StoredGameState {
+    const entries = [...state.players].sort((left, right) => right.totalScore - left.totalScore || left.nickname.localeCompare(right.nickname));
+    const prevRanks: Record<string, number> = {};
+    const prevScores: Record<string, number> = {};
+    entries.forEach((player, index) => {
+      prevRanks[player.id] = index;
+      prevScores[player.id] = player.totalScore;
+    });
+    return { ...state, prevRanks, prevScores };
   }
 
   private teacherView(state: StoredGameState): TeacherGameView {
@@ -348,6 +413,7 @@ export class GameStateManager {
         imageUrl: question.imageUrl,
         options: question.options.map(({ text }) => ({ text })),
         optionCount: question.options.length,
+        timeLimitSec: question.timeLimitSec,
         deadlineAtMs: state.deadlineAtMs,
       } : null,
       leaderboard: ["LEADERBOARD", "FINAL_PODIUM", "ENDED"].includes(state.status) ? this.leaderboard(state) : null,

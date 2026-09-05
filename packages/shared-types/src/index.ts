@@ -81,7 +81,13 @@ export interface StudentQuestionView {
   imageUrl: string | null;
   options: Array<{ text: string }>;
   optionCount: number;
+  timeLimitSec: number;
   deadlineAtMs: number | null;
+}
+
+export interface CountdownTick {
+  value: 3 | 2 | 1;
+  visible: boolean;
 }
 
 export interface LeaderboardEntry {
@@ -89,6 +95,8 @@ export interface LeaderboardEntry {
   playerId: string;
   nickname: string;
   score: number;
+  prevRank?: number | null;
+  scoreDelta?: number;
 }
 
 export interface TeacherGameView {
@@ -140,6 +148,7 @@ export interface ServerToClientEvents {
   "game:student-state": (state: StudentGameView) => void;
   "game:answer-accepted": (payload: AnswerAccepted) => void;
   "game:answer-feedback": (payload: AnswerFeedback) => void;
+  "game:countdown": (payload: CountdownTick) => void;
 }
 
 export interface ClientToServerEvents {

@@ -39,6 +39,11 @@ async function broadcastGameEvent(io: QuizArenaIo, event: GameEvent): Promise<vo
 
   if (event.kind === "answer-submitted") return;
 
+  if (event.kind === "countdown" && event.countdown) {
+    io.to(studentRoom(event.pin)).emit("game:countdown", event.countdown);
+    return;
+  }
+
   const studentState = await manager.getStudentView();
   io.to(studentRoom(event.pin)).emit("game:student-state", studentState);
 

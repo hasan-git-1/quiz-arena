@@ -227,6 +227,45 @@ body { background: var(--color-page-deep); }
 .leaderboard li, .student-leaderboard li { animation: leaderboard-row-in .35s ease both; }
 @keyframes lobby-player-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes leaderboard-row-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Feature 1: Live player list on join screen */
+.join-player-list { display: grid; gap: .5rem; margin-top: 1rem; max-height: 240px; overflow-y: auto; }
+.join-player { display: flex; align-items: center; gap: .6rem; padding: .55rem .75rem; border-radius: .6rem; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .12); animation: lobby-player-in .4s ease both; opacity: 1; }
+.join-player-avatar { display: grid; place-items: center; width: 2rem; height: 2rem; flex: 0 0 auto; font-size: .8rem; font-weight: 800; color: var(--color-page-deep); background: var(--gradient-signature); border-radius: 50%; text-transform: uppercase; }
+.join-player-name { flex: 1; font-weight: 700; color: var(--color-ink); }
+.join-player-you { flex: 0 0 auto; font-size: .65rem; font-weight: 800; padding: .2rem .55rem; background: var(--color-primary); color: #fff; border-radius: 999px; }
+
+/* Join confirmation flash */
+.join-confirm-flash { animation: join-confirm-flash .6s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes join-confirm-flash { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
+
+/* Feature 2: Countdown overlay */
+.countdown-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: rgba(0, 0, 0, .85); backdrop-filter: blur(4px); }
+.countdown-number { font-family: var(--font-display); font-size: clamp(6rem, 20vw, 12rem); font-weight: 900; color: var(--gradient-signature); background: var(--gradient-signature); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 40px rgba(123, 92, 255, .5); animation: countdown-pop .8s cubic-bezier(.2, 1.5, .4, 1) both; letter-spacing: -.08em; }
+@keyframes countdown-pop { from { opacity: 0; transform: scale(.55); filter: brightness(1.2); } 60% { transform: scale(1.08); } to { opacity: 1; transform: scale(1); } }
+
+/* Feature 3: Timer urgency */
+.timer-ring.urgency-low { box-shadow: 0 0 24px rgba(55, 232, 255, .28); }
+.timer-ring.urgency-medium { box-shadow: 0 0 28px rgba(255, 126, 95, .45); animation: timer-pulse-med 1.2s ease-in-out infinite; }
+.timer-ring.urgency-high { box-shadow: 0 0 32px rgba(255, 79, 179, .6); animation: timer-pulse-high .4s ease-in-out infinite; }
+@keyframes timer-pulse-med { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
+@keyframes timer-pulse-high { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.5) saturate(1.3); } }
+
+/* Feature 4: Leaderboard rank change animations */
+.leaderboard ol { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.leaderboard li { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .7rem .8rem; background: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: var(--radius-control); animation: leaderboard-row-in .35s ease both; opacity: 1; position: relative; overflow: hidden; }
+.leaderboard .rank-badge { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; flex: 0 0 auto; font-weight: 800; color: var(--color-page-deep); background: var(--color-accent); border-radius: 50%; font-size: .9rem; }
+.leaderboard .player-name { flex: 1; font-weight: 700; color: var(--color-ink); text-align: left; }
+.leaderboard .score-value { font-weight: 800; color: var(--color-ink); min-width: 3rem; text-align: right; }
+.leaderboard li.rank-up { animation: rank-up-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+.leaderboard li.rank-down { animation: rank-down-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+.leaderboard li.rank-up::before { content: "↑"; position: absolute; left: .5rem; top: 50%; transform: translateY(-50%) scaleX(-1); color: var(--color-success); font-weight: 800; }
+.leaderboard li.rank-down::before { content: "↓"; position: absolute; left: .5rem; top: 50%; transform: translateY(-50%); color: var(--color-error); font-weight: 800; }
+@keyframes rank-up-in { from { opacity: .3; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes rank-down-in { from { opacity: .3; transform: translateY(-10px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* Score count-up animation */
+.score-count-up { animation: score-count-up .4s cubic-bezier(.2, .8, .2, 1) both; }
 @media (prefers-reduced-motion: reduce) { .timer-ring, .student-question-card, .student-answer-stage .student-answer, .feedback-mark, .podium-stage, .podium-rank-1, .podium-rank-2, .podium-rank-3, .podium-rest, .lobby-players li, .leaderboard li, .student-leaderboard li { animation: none; opacity: 1; } }
 
 /* Final mobile readability guardrails. */
@@ -402,3 +441,6 @@ body { background: var(--color-page-deep); }
 .teacher-auth > .teacher-panel .teacher-link { color: #39756d; text-decoration: none; }
 .teacher-auth > .teacher-panel .teacher-link:hover { color: #174d48; text-decoration: underline; text-underline-offset: .2rem; }
 @media (max-width: 720px) { .teacher-auth { grid-template-columns: 1fr; gap: 2rem; padding: 1.5rem 1rem 2rem; }.teacher-auth h1 { font-size: clamp(3rem, 16vw, 4.5rem); }.teacher-auth > .teacher-panel { width: 100%; } }
+
+@keyframes score-count-up { from { opacity: .3; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .countdown-overlay, .countdown-number, .leaderboard li, .timer-ring, .score-count-up { animation: none; opacity: 1; } }

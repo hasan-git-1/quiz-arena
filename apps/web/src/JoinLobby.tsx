@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import type {
   AnswerAccepted,
   AnswerFeedback,
   ClientToServerEvents,
+  CountdownTick,
   JoinLobbyResult,
   LeaderboardEntry,
   LiveGameState,
@@ -11,10 +12,20 @@ import type {
   StudentGameView,
   SubmitAnswerResult,
 } from "@quizarena/shared-types";
-import { Button, Card, Input, PageContainer } from "./ui";
+import { Button, Card, Input, LeaderboardSection, PageContainer } from "./ui";
 
 const socketUrl = import.meta.env.VITE_SOCKET_URL ?? "http://localhost:3001";
 const answerStyles = ["triangle", "diamond", "circle", "square"] as const;
+
+function CountdownOverlay({ value }: { value: 3 | 2 | 1 }) {
+  return (
+    <div className="countdown-overlay">
+      <div className="countdown-number" key={value}>
+        {value}
+      </div>
+    </div>
+  );
+}
 
 function secondsRemaining(deadlineAtMs: number | null): number | null {
   return deadlineAtMs === null ? null : Math.max(0, Math.ceil((deadlineAtMs - Date.now()) / 1_000));
@@ -54,9 +65,12 @@ export function JoinLobby() {
   const [playerId, setPlayerId] = useState<string | null>(() => sessionStorage.getItem("quizarena-student-id"));
   const [message, setMessage] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
+  const [joinConfirmed, setJoinConfirmed] = useState(false);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
   const [seconds, setSeconds] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState<CountdownTick | null>(null);
+  const timerRef = useRef<HTMLDivElement>(null);
   const socket = useMemo(() => io(socketUrl, { autoConnect: false }) as Socket<ServerToClientEvents, ClientToServerEvents>, []);
 
   useEffect(() => {
@@ -67,6 +81,9 @@ export function JoinLobby() {
         setSelectedOption(null);
         setFeedback(null);
       }
+    });
+    socket.on("game:countdown", (tick: CountdownTick) => {
+      setCountdown(tick);
     });
     socket.on("game:answer-accepted", (answer: AnswerAccepted) => {
       setSelectedOption((current) => current ?? -1);
@@ -80,6 +97,7 @@ export function JoinLobby() {
     return () => {
       socket.off("game:lobby-updated", setLobby);
       socket.off("game:student-state");
+      socket.off("game:countdown");
       socket.off("game:answer-accepted");
       socket.off("game:answer-feedback");
       socket.off("connect_error");
@@ -95,6 +113,38 @@ export function JoinLobby() {
     return () => window.clearInterval(interval);
   }, [gameState?.currentQuestion?.deadlineAtMs]);
 
+  useEffect(() => {
+    const deadline = gameState?.currentQuestion?.deadlineAtMs;
+    const element = timerRef.current;
+    if (!element || !deadline) {
+      if (element) element.style.removeProperty("--timer-progress");
+      return;
+    }
+    const timeLimitSec = gameState?.currentQuestion?.timeLimitSec ?? 1;
+    const startTime = deadline - timeLimitSec * 1000;
+    const total = timeLimitSec * 1000;
+    const updateProgress = () => {
+      const progress = Math.max(0, Math.min(100, ((Date.now() - startTime) / total) * 100));
+      element.style.setProperty("--timer-progress", `${progress}%`);
+    };
+    updateProgress();
+    const interval = window.setInterval(updateProgress, 250);
+    return () => {
+      window.clearInterval(interval);
+      element.style.removeProperty("--timer-progress");
+    };
+  }, [gameState?.currentQuestion?.deadlineAtMs, gameState?.currentQuestion?.timeLimitSec]);
+
+  useEffect(() => {
+    let timeout: number | undefined;
+    if (countdown) {
+      if (countdown.visible) {
+        timeout = window.setTimeout(() => setCountdown(null), 1000);
+      }
+    }
+    return () => { if (timeout) window.clearTimeout(timeout); };
+  }, [countdown]);
+
   function join(event: React.FormEvent) {
     event.preventDefault();
     if (!/^\d{6}$/.test(pin)) { setMessage("Enter the six-digit game PIN."); return; }
@@ -103,10 +153,11 @@ export function JoinLobby() {
     const submitJoin = () => socket.emit("game:join-lobby", { pin, nickname: nickname.trim() }, (result: JoinLobbyResult) => {
       setJoining(false);
       if (!result.ok) { setMessage(result.error); return; }
-      sessionStorage.setItem("quizarena-student-session", result.sessionToken);
-      sessionStorage.setItem("quizarena-student-id", result.player.id);
-      setStudentSession(result.sessionToken); setPlayerId(result.player.id); setLobby(result.state);
-      setMessage(`Joined as ${result.player.nickname}.`);
+       sessionStorage.setItem("quizarena-student-session", result.sessionToken);
+       sessionStorage.setItem("quizarena-student-id", result.player.id);
+       setStudentSession(result.sessionToken); setPlayerId(result.player.id); setLobby(result.state);
+       setMessage(`Joined as ${result.player.nickname}.`);
+       setJoinConfirmed(true);
     });
     if (socket.connected) submitJoin(); else { socket.once("connect", submitJoin); socket.connect(); }
   }
@@ -124,16 +175,23 @@ export function JoinLobby() {
   const currentQuestion = gameState?.currentQuestion ?? null;
   const showAnswers = status === "ANSWER_COLLECT" && currentQuestion !== null;
   const isLocked = selectedOption !== null;
+  const timeLimitSec = currentQuestion?.timeLimitSec ?? 10;
+  const urgencyClass = seconds !== null && seconds > 0
+    ? seconds <= 5 ? "urgency-high"
+    : seconds <= 10 ? "urgency-medium"
+    : "urgency-low"
+    : "";
 
   if (!lobby) return <PageContainer className="join-screen"><Card className="teacher-panel join-panel"><p className="eyebrow">QUIZ KHELO</p><h1>Join a live quiz</h1><p>Enter the PIN shown by your teacher.</p><form onSubmit={join}><label>Game PIN<Input inputMode="numeric" maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" autoFocus /></label><label>Nickname<Input value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={30} placeholder="Your name" /></label>{message && <p className="form-error">{message}</p>}<Button disabled={joining}>{joining ? "Joining..." : "Join game"}</Button></form><a className="teacher-link" href="/teacher">Teacher sign up or log in</a></Card></PageContainer>;
 
   return <main className="student-game-screen">
-    <header className="student-header"><span>QUIZ KHELO</span><strong>{seconds !== null ? `${seconds}s` : `${lobby.players.length} players`}</strong></header>
-    {status === "LOBBY" && <section className="student-panel"><p className="eyebrow">YOU ARE IN</p><h1>Hi, {nickname || "player"}!</h1><p>Watch the shared screen. The teacher will start the quiz shortly.</p><div className="student-player-count">{lobby.players.length} players joined</div></section>}
+    {countdown && countdown.visible && <CountdownOverlay value={countdown.value} key={countdown.value} />}
+    <header className="student-header"><span>QUIZ KHELO</span><strong ref={timerRef} className={seconds !== null ? `timer-ring ${urgencyClass}` : ""}>{seconds !== null ? `${seconds}s` : `${lobby.players.length} players`}</strong></header>
+    {status === "LOBBY" && <section className={`student-panel student-wait ${joinConfirmed ? "join-confirm-flash" : ""}`}><p className="eyebrow">YOU ARE IN</p><h1>Hi, {nickname || "player"}!</h1><p>Watch the shared screen. The teacher will start the quiz shortly.</p><div className="student-player-count">{lobby.players.length} players joined</div><div className="join-player-list">{lobby.players.map((player, index) => <div className="join-player" key={player.id} style={{ animationDelay: `${index * 0.05}s` }}><span className="join-player-avatar">{player.nickname.charAt(0).toUpperCase()}</span><span className="join-player-name">{player.nickname}</span>{player.id === playerId && <span className="join-player-you">YOU</span>}</div>)}</div></section>}
     {status === "QUESTION_SHOW" && currentQuestion && <section className="student-panel student-question-preview"><p className="eyebrow">QUESTION {(currentQuestion.index ?? 0) + 1} OF {currentQuestion.totalQuestions}</p><h1>{currentQuestion.text}</h1>{currentQuestion.imageUrl && <img src={currentQuestion.imageUrl} alt="Question illustration" />}<div className="student-option-preview">{currentQuestion.options.map((option, index) => <div className={`student-option-preview-item ${answerStyles[index]}`} key={`${option.text}-${index}`}><span className="answer-symbol" aria-hidden="true" /><strong>{option.text}</strong></div>)}</div><p className="question-preview-note">Answer buttons unlock in a moment.</p></section>}
-    {showAnswers && <section className="student-answer-stage"><div className="student-stage-info"><span>Question {currentQuestion.index + 1} / {currentQuestion.totalQuestions}</span><strong className="timer-ring">{seconds}s</strong></div><article className="student-question-card"><h2>{currentQuestion.text}</h2>{currentQuestion.imageUrl && <img src={currentQuestion.imageUrl} alt="Question illustration" />}</article><div className={`answer-grid answer-grid-${currentQuestion.optionCount}`}>{answerStyles.slice(0, currentQuestion.optionCount).map((shape, index) => <button className={`student-answer ${shape} answer-option-${index + 1} ${selectedOption === index ? "selected" : ""}`} key={shape} onClick={() => submitAnswer(index)} disabled={isLocked} aria-label={`Answer option ${index + 1}: ${currentQuestion.options[index]?.text ?? ""}`}><span className="answer-symbol" aria-hidden="true" /><span className="answer-label">{currentQuestion.options[index]?.text}</span></button>)}</div>{isLocked && <div className="student-panel answer-locked"><p className="eyebrow">ANSWER LOCKED</p><p>Your answer was securely sent to the server.</p></div>}</section>}
+    {showAnswers && <section className="student-answer-stage"><div className="student-stage-info"><span>Question {currentQuestion.index + 1} / {currentQuestion.totalQuestions}</span><strong className={`timer-ring ${urgencyClass}`}>{seconds}s</strong></div><article className="student-question-card"><h2>{currentQuestion.text}</h2>{currentQuestion.imageUrl && <img src={currentQuestion.imageUrl} alt="Question illustration" />}</article><div className={`answer-grid answer-grid-${currentQuestion.optionCount}`}>{answerStyles.slice(0, currentQuestion.optionCount).map((shape, index) => <button className={`student-answer ${shape} answer-option-${index + 1} ${selectedOption === index ? "selected" : ""}`} key={shape} onClick={() => submitAnswer(index)} disabled={isLocked} aria-label={`Answer option ${index + 1}: ${currentQuestion.options[index]?.text ?? ""}`}><span className="answer-symbol" aria-hidden="true" /><span className="answer-label">{currentQuestion.options[index]?.text}</span></button>)}</div>{isLocked && <div className="student-panel answer-locked"><p className="eyebrow">ANSWER LOCKED</p><p>Your answer was securely sent to the server.</p></div>}</section>}
     {status === "ANSWER_REVEAL" && <section className={`student-panel feedback ${feedback?.isCorrect ? "correct" : "incorrect"}`}><span className="feedback-mark" aria-hidden="true">{feedback?.answered ? feedback.isCorrect ? "✓" : "×" : "!"}</span><p className="eyebrow">ANSWER REVEAL</p><h1>{feedback?.answered ? feedback.isCorrect ? "Correct!" : "Not this time" : "Time is up"}</h1><p>{feedback?.answered ? feedback.isCorrect ? `+${feedback.pointsAwarded} points` : "No points this round" : "You did not submit an answer."}</p>{feedback && <div className="rank-card"><span>Your score</span><strong>{feedback.totalScore}</strong><span>Rank #{feedback.rank}</span></div>}</section>}
-    {status === "LEADERBOARD" && <section className="student-panel student-leaderboard"><p className="eyebrow">LEADERBOARD</p><h1>{ownLeaderboardEntry ? `You are #${ownLeaderboardEntry.rank}` : "Scores updated"}</h1><ol>{gameState?.leaderboard?.slice(0, 5).map((entry) => <li className={entry.playerId === playerId ? "you" : ""} key={entry.playerId}><span>#{entry.rank} {entry.nickname}</span><strong>{entry.score}</strong></li>)}</ol><p>Watch the shared screen for the next question.</p></section>}
+    {status === "LEADERBOARD" && <section className="student-panel student-leaderboard"><p className="eyebrow">LEADERBOARD</p><h1>{ownLeaderboardEntry ? `You are #${ownLeaderboardEntry.rank}` : "Scores updated"}</h1><LeaderboardSection entries={gameState?.leaderboard ?? []} maxEntries={5} /><p>Watch the shared screen for the next question.</p></section>}
     {status === "FINAL_PODIUM" && <FinalPodium entries={gameState?.leaderboard ?? []} playerId={playerId} />}
     {status === "ENDED" && <section className="student-panel"><p className="eyebrow">THANKS FOR PLAYING</p><h1>Game ended</h1><p>{ownLeaderboardEntry ? `You finished with ${ownLeaderboardEntry.score} points.` : "See you in the next quiz."}</p></section>}
     {message && <p className="student-message">{message}</p>}
